@@ -88,7 +88,7 @@ func (j *BQJob) GetTableRef() *bigquery.TableReference {
 func (j *BQJob) GetRefJob() *bigquery.Job {
 	load := new(bigquery.JobConfigurationLoad)
 	load.DestinationTable = j.GetTableRef()
-	load.Schema = j.Schema.getRefSchema()
+	load.Schema = j.Schema
 	load.SourceFormat = SourceFormat
 	load.SourceUris = []string{j.Source}
 	load.WriteDisposition = WriteDisposition
