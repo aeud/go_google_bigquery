@@ -36,13 +36,13 @@ func TestRepeatedSchema(t *testing.T) {
 	s.AddField(NewBQField("foo2", "STRING", "Test description 2"))
 }
 
-func TestExecuteJob(t *testing.T) {
-	schema := NewBQSchema([]*BQField{
-		schema.AddField(NewBQField("foo", "STRING", "Test description")),
-	})
+//func TestExecuteJob(t *testing.T) {
+//	schema := NewBQSchema([]*BQField{
+//		schema.AddField(NewBQField("foo", "STRING", "Test description")),
+//	})//
 
-	service := NewBQService("luxola.com:luxola-analytics", "/Users/adrien/.ssh/google.json")
-	job := service.NewJob("go", "test_table", "gs://lx-ga/test.json.gz", schema)
+//	service := NewBQService("luxola.com:luxola-analytics", "/Users/adrien/.ssh/google.json")
+//	job := service.NewJob("go", "test_table", "gs://lx-ga/test.json.gz", schema)//
 
-	job.Do()
-}
+//	job.Do()
+//}
