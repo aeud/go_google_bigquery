@@ -56,7 +56,7 @@ func NewBQService(projectID, keyFile string) *BQService {
 
 func (s *BQService) NewJob(dataset, table, source string, schema string) *BQJob {
 	bqSchema := new(bigquery.TableSchema)
-	err := json.Unmarshal(schema, bqSchema)
+	err := json.Unmarshal([]byte(schema), bqSchema)
 	if err != nil {
 		log.Fatalln(err)
 	}
