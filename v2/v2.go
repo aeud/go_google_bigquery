@@ -149,11 +149,11 @@ func (s *BQService) Query(query, dataset, table string) *BQQueryJob {
 
 func (j *BQQueryJob) GetRefJob() *bigquery.Job {
 	q := new(bigquery.JobConfigurationQuery)
-	q.AllowLargeResults = true
 	q.UseLegacySql = false
 	q.CreateDisposition = "CREATE_IF_NEEDED"
 	q.WriteDisposition = "WRITE_TRUNCATE"
 	q.Query = j.Q
+	q.ForceSendFields = []string{"UseLegacySql"}
 	dataset := new(bigquery.DatasetReference)
 	dataset.DatasetId = j.DestinationDataset
 	dataset.ProjectId = j.Service.ProjetID
