@@ -54,7 +54,7 @@ func NewBQService(projectID, keyFile string) *BQService {
 	return s
 }
 
-func (s *BQService) NewJob(dataset, table, source string, schema string) *BQJob {
+func (s *BQService) NewJob(dataset, table, source, schema string) *BQJob {
 	bqSchema := new(bigquery.TableSchema)
 	err := json.Unmarshal([]byte(schema), bqSchema)
 	if err != nil {
@@ -126,4 +126,58 @@ func CheckJob(c *bigquery.JobsGetCall) {
 			log.Println(job.Status.Errors[i])
 		}
 	}
+}
+
+type BQQueryJob struct {
+	Service            *BQService
+	CreateDisposition  string
+	DestinationDataset string
+	DestinationTable   string
+	Q                  string
+	UseLegacySql       bool
+	WriteDisposition   string
+}
+
+func (s *BQService) Query(query, dataset, table string) *BQQueryJob {
+	j := new(BQQueryJob)
+	j.Service = s
+	j.DestinationDataset = dataset
+	j.DestinationTable = table
+	j.Q = query
+	return j
+}
+
+func (j *BQQueryJob) GetRefJob() *bigquery.Job {
+	q := new(bigquery.JobConfigurationQuery)
+	q.AllowLargeResults = true
+	q.UseLegacySql = false
+	q.CreateDisposition = "CREATE_IF_NEEDED"
+	q.WriteDisposition = "WRITE_TRUNCATE"
+	q.Query = j.Q
+	dataset := new(bigquery.DatasetReference)
+	dataset.DatasetId = j.DestinationDataset
+	dataset.ProjectId = j.Service.ProjetID
+	q.DefaultDataset = dataset
+	table := new(bigquery.TableReference)
+	table.DatasetId = j.DestinationDataset
+	table.ProjectId = j.Service.ProjetID
+	table.TableId = j.DestinationTable
+	q.DestinationTable = table
+	conf := new(bigquery.JobConfiguration)
+	conf.Query = q
+	job := new(bigquery.Job)
+	job.Configuration = conf
+	return job
+}
+
+func (j *BQQueryJob) Do() {
+	service := j.Service.Service
+	projectID := j.Service.ProjetID
+
+	insertJob, err := service.Insert(projectID, j.GetRefJob()).Do()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	CheckJob(service.Get(projectID, insertJob.JobReference.JobId))
 }
