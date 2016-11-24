@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigquery "google.golang.org/api/bigquery/v2"
@@ -99,7 +100,7 @@ func (j *BQJob) GetRefJob() *bigquery.Job {
 	return job
 }
 
-func (j *BQJob) Do() {
+func (j *BQJob) Do() *BQResult {
 	service := j.Service.Service
 	projectID := j.Service.ProjetID
 
@@ -108,10 +109,10 @@ func (j *BQJob) Do() {
 		log.Fatal(err)
 	}
 
-	CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Source)
+	return CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Source)
 }
 
-func CheckJob(c *bigquery.JobsGetCall, mess string) {
+func CheckJob(c *bigquery.JobsGetCall, mess string) *BQResult {
 	job, err := c.Do()
 	if err != nil {
 		log.Fatal(err)
@@ -119,13 +120,20 @@ func CheckJob(c *bigquery.JobsGetCall, mess string) {
 	log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
 		time.Sleep(time.Second)
-		CheckJob(c, mess)
-	} else if job.Status.ErrorResult != nil {
-		log.Println(job.Status.ErrorResult)
-		log.Println(mess)
-		for i := 0; i < len(job.Status.Errors); i++ {
-			log.Println(job.Status.Errors[i])
+		return CheckJob(c, mess)
+	} else {
+		r := NewBQResult(job)
+		r.Message = "Success"
+		if job.Status.ErrorResult != nil {
+			r.Error = fmt.Sprintf("%v", job.Status.ErrorResult.Message)
+			r.Message = fmt.Sprintf("Error: %v", job.Status.ErrorResult.Message)
+			// log.Println(job.Status.ErrorResult)
+			// log.Println(mess)
+			// for i := 0; i < len(job.Status.Errors); i++ {
+			// log.Println(job.Status.Errors[i])
+			//}
 		}
+		return r
 	}
 }
 
@@ -171,7 +179,7 @@ func (j *BQQueryJob) GetRefJob() *bigquery.Job {
 	return job
 }
 
-func (j *BQQueryJob) Do() {
+func (j *BQQueryJob) Do() *BQResult {
 	service := j.Service.Service
 	projectID := j.Service.ProjetID
 
@@ -180,5 +188,17 @@ func (j *BQQueryJob) Do() {
 		log.Fatal(err)
 	}
 
-	CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Q)
+	return CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Q)
+}
+
+type BQResult struct {
+	job     *bigquery.Job
+	Message string
+	Error   string
+}
+
+func NewBQResult(job *bigquery.Job) *BQResult {
+	r := new(BQResult)
+	r.job = job
+	return r
 }

@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -33,4 +34,6 @@ func TestDo(t *testing.T) {
     `
 	service := NewBQService("luxola.com:luxola-analytics", "/Users/adrien/.ssh/google.json")
 	service.NewJob("go", "xe", "gs://lx-ga/dwh/xe/*", doc).Do()
+	r := service.NewJob("go", "xe", "gs://lx-ga/dwh/xe/*", doc).Do()
+	fmt.Println(r)
 }
