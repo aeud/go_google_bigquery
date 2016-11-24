@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -117,7 +118,7 @@ func CheckJob(c *bigquery.JobsGetCall, mess string) *BQResult {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(job.Status.State)
+	// log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
 		time.Sleep(time.Second)
 		return CheckJob(c, mess)
@@ -125,7 +126,7 @@ func CheckJob(c *bigquery.JobsGetCall, mess string) *BQResult {
 		r := NewBQResult(job)
 		r.Message = "Success"
 		if job.Status.ErrorResult != nil {
-			r.Error = fmt.Sprintf("%v", job.Status.ErrorResult.Message)
+			r.Error = errors.New(fmt.Sprintf("%v", job.Status.ErrorResult.Message))
 			r.Message = fmt.Sprintf("Error: %v", job.Status.ErrorResult.Message)
 			// log.Println(job.Status.ErrorResult)
 			// log.Println(mess)
@@ -194,7 +195,7 @@ func (j *BQQueryJob) Do() *BQResult {
 type BQResult struct {
 	job     *bigquery.Job
 	Message string
-	Error   string
+	Error   error
 }
 
 func NewBQResult(job *bigquery.Job) *BQResult {
