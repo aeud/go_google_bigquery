@@ -108,10 +108,10 @@ func (j *BQJob) Do() {
 		log.Fatal(err)
 	}
 
-	CheckJob(j, service.Get(projectID, insertJob.JobReference.JobId))
+	CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Source)
 }
 
-func CheckJob(j *BQQueryJob, c *bigquery.JobsGetCall) {
+func CheckJob(c *bigquery.JobsGetCall, mess string) {
 	job, err := c.Do()
 	if err != nil {
 		log.Fatal(err)
@@ -119,10 +119,10 @@ func CheckJob(j *BQQueryJob, c *bigquery.JobsGetCall) {
 	log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
 		time.Sleep(time.Second)
-		CheckJob(j, c)
+		CheckJob(c, mess)
 	} else if job.Status.ErrorResult != nil {
 		log.Println(job.Status.ErrorResult)
-		log.Println(j.Q)
+		log.Println(mess)
 		for i := 0; i < len(job.Status.Errors); i++ {
 			log.Println(job.Status.Errors[i])
 		}
@@ -180,5 +180,5 @@ func (j *BQQueryJob) Do() {
 		log.Fatal(err)
 	}
 
-	CheckJob(j, service.Get(projectID, insertJob.JobReference.JobId))
+	CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Q)
 }
