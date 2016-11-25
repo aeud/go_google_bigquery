@@ -40,7 +40,7 @@ func NewBQService(projectID, keyFile string) *BQService {
 	s := new(BQService)
 	data, err := ioutil.ReadFile(keyFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("IO: %v\n", err)
 	}
 	conf, err := google.JWTConfigFromJSON(data, []string{bigquery.BigqueryScope}...)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *BQService) NewJob(dataset, table, source, schema string) *BQJob {
 	bqSchema := new(bigquery.TableSchema)
 	err := json.Unmarshal([]byte(schema), bqSchema)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Job: %v\n", err)
 	}
 	job := new(BQJob)
 	job.Service = s
@@ -107,7 +107,7 @@ func (j *BQJob) Do() *BQResult {
 
 	insertJob, err := service.Insert(projectID, j.GetRefJob()).Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Job do: %v\n", err)
 	}
 
 	return CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Source)
@@ -116,7 +116,7 @@ func (j *BQJob) Do() *BQResult {
 func CheckJob(c *bigquery.JobsGetCall, mess string) *BQResult {
 	job, err := c.Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Check job: %v\n", err)
 	}
 	// log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
@@ -186,7 +186,7 @@ func (j *BQQueryJob) Do() *BQResult {
 
 	insertJob, err := service.Insert(projectID, j.GetRefJob()).Do()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Job Query Do: %v\n", err)
 	}
 
 	return CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j.Q)
