@@ -44,12 +44,12 @@ func NewBQService(projectID, keyFile string) *BQService {
 	}
 	conf, err := google.JWTConfigFromJSON(data, []string{bigquery.BigqueryScope}...)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("JWT: %v\n", err)
 	}
 	client := conf.Client(oauth2.NoContext)
 	service, err := bigquery.New(client)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Service: %v\n", err)
 	}
 	s.Service = bigquery.NewJobsService(service)
 	s.ProjetID = projectID
