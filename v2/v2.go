@@ -183,7 +183,7 @@ func (j *BQQueryJob) GetRefJob() *bigquery.Job {
 func (j *BQQueryJob) Do() *BQResult {
 	service := j.Service.Service
 	projectID := j.Service.ProjetID
-
+	fmt.Println(j.DestinationTable)
 	insertJob, err := service.Insert(projectID, j.GetRefJob()).Do()
 	if err != nil {
 		log.Fatalf("Job Query Do: %v\n", err)
