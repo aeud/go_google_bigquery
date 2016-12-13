@@ -116,7 +116,9 @@ func (j *BQJob) Do() *BQResult {
 func CheckJob(c *bigquery.JobsGetCall, mess string) *BQResult {
 	job, err := c.Do()
 	if err != nil {
-		log.Fatalf("Check job: %v\n", err)
+		log.Printf("Check job: %v\n", err)
+		time.Sleep(time.Second)
+		return CheckJob(c, mess)
 	}
 	// log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
