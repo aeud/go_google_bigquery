@@ -177,7 +177,6 @@ func CheckJob(c *bigquery.JobsGetCall, j *BQJob) {
 			log.Fatalf("Error when checking the job: %v", err)
 		}
 	}
-	log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
 		time.Sleep(time.Second)
 		CheckJob(c, j)
