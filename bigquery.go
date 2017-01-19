@@ -1,12 +1,13 @@
 package go_google_bigquery
 
 import (
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	bigquery "google.golang.org/api/bigquery/v2"
 	"io/ioutil"
 	"log"
 	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	bigquery "google.golang.org/api/bigquery/v2"
 )
 
 const (
@@ -118,6 +119,7 @@ func (s *BQService) NewJob(dataset, table, source string, schema *BQSchema) *BQJ
 	job.Dataset = dataset
 	job.Table = table
 	job.Source = source
+	job.try = 0
 	return job
 }
 
@@ -127,6 +129,7 @@ type BQJob struct {
 	Dataset string
 	Table   string
 	Source  string
+	try     int
 }
 
 func (j *BQJob) GetTableRef() *bigquery.TableReference {
@@ -160,18 +163,24 @@ func (j *BQJob) Do() {
 		log.Fatal(err)
 	}
 
-	CheckJob(service.Get(projectID, insertJob.JobReference.JobId))
+	CheckJob(service.Get(projectID, insertJob.JobReference.JobId), j)
 }
 
-func CheckJob(c *bigquery.JobsGetCall) {
+func CheckJob(c *bigquery.JobsGetCall, j *BQJob) {
 	job, err := c.Do()
 	if err != nil {
-		log.Fatal(err)
+		if j.try < 5 {
+			j.try = j.try + 1
+			time.Sleep(time.Second)
+			j.Do()
+		} else {
+			log.Fatalf("Error when checking the job: %v", err)
+		}
 	}
 	log.Println(job.Status.State)
 	if job.Status.State != "DONE" {
 		time.Sleep(time.Second)
-		CheckJob(c)
+		CheckJob(c, j)
 	} else if job.Status.ErrorResult != nil {
 		log.Println(job.Status.ErrorResult)
 		for i := 0; i < len(job.Status.Errors); i++ {
